@@ -135,7 +135,4 @@ def test_performance():
     else:
         print("\n[INFO] All values are greater than 0. Assertion passed!")
 
-    return{
-        "_name": "llmperf",
-        "_data": value_lists
-    } 
+    return {"_name": "llmperf", "_data": value_lists}
