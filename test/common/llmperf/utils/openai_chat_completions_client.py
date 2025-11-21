@@ -19,7 +19,6 @@ class OpenAIChatCompletionsClient:
         prompt, prompt_len = request_config.prompt
 
         message = [
-            {"role": "system", "content": ""},
             {"role": "user", "content": prompt},
         ]
         model = request_config.model
