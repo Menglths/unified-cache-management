@@ -22,12 +22,15 @@ llm_connection:
   model: "qwen3"
   server_url: "http://141.111.32.70:9382"
   tokenizer_path: "/home/models/QwQ-32B"
+  repeated_number: 30           # 设置为0则每次都产生随机推理请求
+  support_concurrent: True     # support_current为true时，hit_rates、repeated_number失效
 
 # Performance Test Configuration
 llmperf_test_cases:
-  - mean_input_tokens: 6000
+  - mean_input_tokens: 1000
     mean_output_tokens: 200
-    max_num_completed_requests: 16
-    concurrent_requests: 8
+    max_num_completed_requests: 10
+    concurrent_requests: 4
     additional_sampling_params: "{}"
-    hit_rate: 0
+    concurrent_test_requests: 2       # support_current为true时生效，为第二次需要完成的推理请求数，
+    hit_rate: 50
