@@ -36,6 +36,7 @@ def get_token_throughput_latencies(
     random_seed: int = None,
     openai_api_base: str = "",
     tokenizer_path: str = None,
+    user_metadata: Dict[str, Any] = {}
 ) -> Tuple[Dict[str, Any], List[Dict[str, Any]], float, float]:
     """Get the token throughput and latencies for the given model.
 
@@ -58,7 +59,7 @@ def get_token_throughput_latencies(
         The individual metrics for each request.
     """
     random.seed(random_seed)
-
+    same = []
     print(f"Using tokenizer:{tokenizer_path}")
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
     get_token_length = lambda text: len(tokenizer.encode(text))
@@ -74,13 +75,24 @@ def get_token_throughput_latencies(
                 mean_output_tokens, stddev_output_tokens
             )
             num_output_tokens_list.append(num_output)
-            prompts.append(
-                randomly_sample_sonnet_lines_prompt(
-                    prompt_tokens_mean=mean_input_tokens,
-                    prompt_tokens_stddev=stddev_input_tokens,
-                    tokenizer=tokenizer,
+            if user_metadata["phase"] == "concurrent":
+                if i == 0:
+                    same = randomly_sample_sonnet_lines_prompt(
+                        prompt_tokens_mean=mean_input_tokens,
+                        prompt_tokens_stddev=stddev_input_tokens,
+                        tokenizer=tokenizer,
+                    )
+                    prompts.append(same)
+                else:
+                    prompts.append(same)
+            else:
+                prompts.append(
+                    randomly_sample_sonnet_lines_prompt(
+                        prompt_tokens_mean=mean_input_tokens,
+                        prompt_tokens_stddev=stddev_input_tokens,
+                        tokenizer=tokenizer,
+                    )
                 )
-            )
         start_time = time.monotonic()
         completed_requests: List[Dict[str, Any]] = []
         incremental_time_delay = 0.0
@@ -341,6 +353,7 @@ def run_token_benchmark(
             random_seed=random_seed,
             openai_api_base=openai_api_base,
             tokenizer_path=tokenizer_path,
+            user_metadata=user_metadata
         )
     )
     if mean_output_tokens == 2:
