@@ -126,7 +126,7 @@ def run_test_cases(test_cases, timestamp_dir, model, server_url, tokenizer_path,
 """
 KV Pool 支持并发读写测试    可以并发执行20个推理任务，然后再次执行并发10个任务，这10个任务是前面20个推理任务中的第一个任务
 """
-def support_current_test(test_cases, timestamp_dir, model, server_url, tokenizer_path, support_concurrent: bool):
+def support_current_test(test_cases, timestamp_dir, model, server_url, tokenizer_path, repeated_number):
     """
     Execute all test cases and return the list of failed case indices and hit_rate mapping for each case.
     Parameters:
@@ -151,7 +151,7 @@ def support_current_test(test_cases, timestamp_dir, model, server_url, tokenizer
         print(f"\n>>> Executing test case {i + 1} <<<")
         reset_prefill_cache(env, server_url)
         # Use a fixed random_seed for each test to control PC hit_rate
-        random_seed = random.randint(1, 100000)
+        random_seed = repeated_number if repeated_number != 0 else random.randint(1, 100000)
         summary = {}
 
         # Read parameters from configuration file
@@ -163,72 +163,31 @@ def support_current_test(test_cases, timestamp_dir, model, server_url, tokenizer
         concurrent = case.get("concurrent_requests", 1)
         llm_api = case.get("llm_api", "openai")
         additional_sampling_params = case.get("additional_sampling_params", "{}")
+        execute_phase = case.get("execute_phase", "normal")
         timeout = case.get("timeout", 60000)
-        concurrent_test_requests = case.get("concurrent_test_requests", 1)
-        hit_rate = case.get("hit_rate", 0)
 
         try:
-            # Determine if two runs are needed (concurrent test)
-            if support_concurrent is False:
-                summary = run_token_benchmark(
-                    llm_api=llm_api,
-                    model=model,
-                    test_timeout_s=timeout,
-                    max_num_completed_requests=max_completed,
-                    concurrent_requests=concurrent,
-                    mean_input_tokens=mean_input,
-                    stddev_input_tokens=stddev_input,
-                    mean_output_tokens=mean_output,
-                    stddev_output_tokens=stddev_output,
-                    additional_sampling_params=additional_sampling_params,
-                    results_dir=str(timestamp_dir),
-                    random_seed=random_seed,
-                    openai_api_base=server_url + "/v1",
-                    tokenizer_path=tokenizer_path,
-                    user_metadata={"case_idx": i, "phase": "normal"},
-                )
-            else:
-                print(f"[INFO] support_current is true, entering concurrent mode")
-                print(
-                    f"[INFO] First execution: mean_input_tokens={mean_input}"
-                )
-                run_token_benchmark(
-                    llm_api=llm_api,
-                    model=model,
-                    test_timeout_s=timeout,
-                    max_num_completed_requests=max_completed,
-                    concurrent_requests=concurrent,
-                    mean_input_tokens=mean_input,
-                    stddev_input_tokens=stddev_input,
-                    mean_output_tokens=mean_output,
-                    stddev_output_tokens=stddev_output,
-                    additional_sampling_params=additional_sampling_params,
-                    results_dir=str(timestamp_dir),
-                    random_seed=random_seed,
-                    openai_api_base=server_url + "/v1",
-                    tokenizer_path=tokenizer_path,
-                    user_metadata={"case_idx": i, "phase": "normal"},
-                )
-                reset_prefill_cache(env, server_url)
-                # Then run concurrent mode
-                print("[INFO] First completed, switching to concurrent mode execution")
-                summary = run_token_benchmark(
-                    llm_api=llm_api,
-                    model=model,
-                    test_timeout_s=timeout,
-                    max_num_completed_requests=concurrent_test_requests,
-                    concurrent_requests=concurrent,
-                    mean_input_tokens=mean_input,
-                    stddev_input_tokens=stddev_input,
-                    mean_output_tokens=mean_output,
-                    stddev_output_tokens=stddev_output,
-                    additional_sampling_params=additional_sampling_params,
-                    results_dir=str(timestamp_dir),
-                    random_seed=random_seed,
-                    openai_api_base=server_url + "/v1",
-                    tokenizer_path=tokenizer_path,
-                    user_metadata={"case_idx": i, "phase": "concurrent"},
-                )
+            print(f"[INFO] support_current is true, entering concurrent mode")
+            print(
+                f"[INFO] Execution: mean_input_tokens={mean_input}"
+            )
+            summary = run_token_benchmark(
+                llm_api=llm_api,
+                model=model,
+                test_timeout_s=timeout,
+                max_num_completed_requests=max_completed,
+                concurrent_requests=concurrent,
+                mean_input_tokens=mean_input,
+                stddev_input_tokens=stddev_input,
+                mean_output_tokens=mean_output,
+                stddev_output_tokens=stddev_output,
+                additional_sampling_params=additional_sampling_params,
+                results_dir=str(timestamp_dir),
+                random_seed=random_seed,
+                openai_api_base=server_url + "/v1",
+                tokenizer_path=tokenizer_path,
+                user_metadata={"case_idx": i, "phase": execute_phase},
+            )
             all_summaries.append(summary)
         except Exception as e:
             print(e)
@@ -262,7 +221,7 @@ def inference_results():
         else:
             # 测试类型二，支持并发读写
             all_summaries, failed_cases = support_current_test(
-                test_cases, timestamp_dir, model, server_url, tokenizer_path, support_concurrent
+                test_cases, timestamp_dir, model, server_url, tokenizer_path, repeated_number
             )
 
         total = len(test_cases)
