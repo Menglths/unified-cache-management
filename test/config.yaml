@@ -9,7 +9,7 @@ reports:
 
 database:
   backup: "results/"
-  enabled: true
+  enabled: false
   host: "127.0.0.1"
   port: 3306
   name: "ucm_pytest"
@@ -29,8 +29,8 @@ llm_connection:
 llmperf_test_cases:
   - mean_input_tokens: 1000
     mean_output_tokens: 200
-    max_num_completed_requests: 10
+    max_num_completed_requests: 5    # support_current为true时生效，第一次执行完成后需修改该处变量
     concurrent_requests: 4
     additional_sampling_params: "{}"
-    concurrent_test_requests: 2       # support_current为true时生效，为第二次需要完成的推理请求数，
+    execute_phase: "normal"       # support_current为true时生效，第一次执行为 normal，第二次执行需修改为 concurrent
     hit_rate: 50
