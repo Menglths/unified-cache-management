@@ -195,7 +195,6 @@ def test_check_tls():
 
 # ========= Model Weight Files Check =========
 @pytest.mark.stage(1)
-@pytest.mark.platform("npu")
 @pytest.mark.feature("test_check_model_weights")
 def test_check_model_weights():
     """
@@ -259,8 +258,8 @@ def test_check_bandwidth():
 
     # Validation
     assert (
-        bandwidth["embed"] < 0.85 * EXPECTED_EMBED_BANDWIDTH
-    ), f"Embed bandwidth too high: {bandwidth['embed']} GB/s"
+        bandwidth["dump"] < 0.85 * EXPECTED_EMBED_BANDWIDTH
+    ), f"Embed bandwidth too high: {bandwidth['dump']} GB/s"
     assert (
-        bandwidth["fetch"] < 0.85 * EXPECTED_FETCH_BANDWIDTH
-    ), f"Fetch bandwidth too high: {bandwidth['fetch']} GB/s"
+        bandwidth["load"] < 0.85 * EXPECTED_FETCH_BANDWIDTH
+    ), f"Fetch bandwidth too high: {bandwidth['load']} GB/s"

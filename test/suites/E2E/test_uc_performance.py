@@ -36,9 +36,13 @@ if perf_test_case_str:
                     break
             if valid:
                 perf_scenarios = result
-                print(f"Successfully loaded configuration from environment variable: {perf_scenarios}")
+                print(
+                    f"Successfully loaded configuration from environment variable: {perf_scenarios}"
+                )
             else:
-                print("Environment variable format is invalid, using default configuration")
+                print(
+                    "Environment variable format is invalid, using default configuration"
+                )
         else:
             print("Parsed result is empty or not a list, using default configuration")
     except json.JSONDecodeError as e:
